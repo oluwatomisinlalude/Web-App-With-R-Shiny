@@ -99,14 +99,33 @@ ui <- dashboardPage(
         tabName = "forecasting",
         fluidRow(
           box(
-            title = "Sales Forecast",
+            title = "Region-wise Sales Forecast",
             status = "primary",
-            width = 12,
-            plotlyOutput("salesForecast")
+            width = 6,
+            plotlyOutput("regionSalesForecast")
+          ),
+          box(
+            title = "Category-wise Sales Forecast",
+            status = "primary",
+            width = 6,
+            plotlyOutput("categorySalesForecast")
+          )
+        ),
+        fluidRow(
+          box(
+            title = "Sub-Category-wise Sales Forecast",
+            status = "primary",
+            width = 6,
+            plotlyOutput("subCategorySalesForecast")
+          ),
+          box(
+            title = "Yearly Sales Forecast",
+            status = "primary",
+            width = 6,
+            plotlyOutput("yearlySalesForecast")
           )
         )
       ),
-      
       # Maps Tab
       tabItem(
         tabName = "maps",
@@ -285,34 +304,66 @@ server <- function(input, output) {
   })
   
   # Sales Forecast
-  output$salesForecast <- renderPlotly({
-    monthlySales <- filteredData() %>% 
-      group_by(Month) %>% 
-      summarise(TotalSales = sum(Sales, na.rm = TRUE)) %>% 
-      mutate(Month = as.Date(paste0(Month, "-01")))
+  output$regionSalesForecast <- renderPlotly({
+    regionData <- filteredData() %>%
+      group_by(Region, Month) %>%
+      summarise(TotalSales = sum(Sales, na.rm = TRUE), .groups = "drop") %>%
+      filter(!is.na(Region)) %>%
+      arrange(Month)
     
-    if (nrow(monthlySales) < 12) {
-      plot_ly() %>%
-        layout(title = "Insufficient Data for Forecasting")
-    } else {
-      tsSales <- ts(
-        monthlySales$TotalSales, 
-        frequency = 12, 
-        start = c(as.numeric(format(min(monthlySales$Month), "%Y")), 
-                  as.numeric(format(min(monthlySales$Month), "%m")))
-      )
-      fit <- auto.arima(tsSales)
-      forecasted <- forecast(fit, h = 12)
-      forecastDf <- data.frame(
-        Date = seq(max(monthlySales$Month) + 1, by = "month", length.out = 12),
-        Sales = as.numeric(forecasted$mean)
-      )
-      historical <- data.frame(Date = monthlySales$Month, Sales = monthlySales$TotalSales)
-      combined <- rbind(historical, forecastDf)
-      
-      plot_ly(combined, x = ~Date, y = ~Sales, type = "scatter", mode = "lines+markers",
-              name = "Forecast")
-    }
+    if (nrow(regionData) == 0) return(NULL)
+    
+    tsRegionSales <- ts(regionData$TotalSales, frequency = 12)  # Assuming monthly data
+    regionForecast <- forecast(auto.arima(tsRegionSales), h = 12)  # Forecasting next 12 months
+    
+    plot_ly(x = time(regionForecast$mean), y = regionForecast$mean, type = 'scatter', mode = 'lines', name = 'Forecast') %>%
+      layout(title = "Region-wise Sales Forecast", xaxis = list(title = "Month"), yaxis = list(title = "Sales"))
+  })
+  
+  output$categorySalesForecast <- renderPlotly({
+    categoryData <- filteredData() %>%
+      group_by(Category, Month) %>%
+      summarise(TotalSales = sum(Sales, na.rm = TRUE), .groups = "drop") %>%
+      filter(!is.na(Category)) %>%
+      arrange(Month)
+    
+    if (nrow(categoryData) == 0) return(NULL)
+    
+    tsCategorySales <- ts(categoryData$TotalSales, frequency = 12)  # Assuming monthly data
+    categoryForecast <- forecast(auto.arima(tsCategorySales), h = 12)  # Forecasting next 12 months
+    
+    plot_ly(x = time(categoryForecast$mean), y = categoryForecast$mean, type = 'scatter', mode = 'lines', name = 'Forecast') %>%
+      layout(title = "Category-wise Sales Forecast", xaxis = list(title = "Month"), yaxis = list(title = "Sales"))
+  })
+  
+  output$subCategorySalesForecast <- renderPlotly({
+    subCategoryData <- filteredData() %>%
+      group_by(Sub.Category, Month) %>%
+      summarise(TotalSales = sum(Sales, na.rm = TRUE), .groups = "drop") %>%
+      filter(!is.na(Sub.Category)) %>%
+      arrange(Month)
+    
+    if (nrow(subCategoryData) == 0) return(NULL)
+    
+    tsSubCategorySales <- ts(subCategoryData$TotalSales, frequency = 12)  # Assuming monthly data
+    subCategoryForecast <- forecast(auto.arima(tsSubCategorySales), h = 12)  # Forecasting next 12 months
+    
+    plot_ly(x = time(subCategoryForecast$mean), y = subCategoryForecast$mean, type = 'scatter', mode = 'lines', name = 'Forecast') %>%
+      layout(title = "Sub-Category-wise Sales Forecast", xaxis = list(title = "Month"), yaxis = list(title = "Sales"))
+  })
+  
+  output$yearlySalesForecast <- renderPlotly({
+    yearlySales <- filteredData() %>%
+      group_by(Year) %>%
+      summarise(TotalSales = sum(Sales, na.rm = TRUE), .groups = "drop")
+    
+    if (nrow(yearlySales) == 0) return(NULL)
+    
+    tsYearlySales <- ts(yearlySales$TotalSales, frequency = 1)  # Assuming yearly data
+    yearlyForecast <- forecast(auto.arima(tsYearlySales), h = 5)  # Forecasting next 5 years
+    
+    plot_ly(x = time(yearlyForecast$mean), y = yearlyForecast$mean, type = 'scatter', mode = 'lines', name = 'Forecast') %>%
+      layout(title = "Yearly Sales Forecast", xaxis = list(title = "Year"), yaxis = list(title = "Sales"))
   })
   
   # Sales Map
