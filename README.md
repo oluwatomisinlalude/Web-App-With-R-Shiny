@@ -20,7 +20,7 @@ This project showcases an interactive dashboard built using R Shiny. The dashboa
 Ensure the following software and packages are installed on your system:
 - R version 4.0 or higher
 - RStudio
-- Packages: `shiny`, `shinydashboard`, `ggplot2`, `dplyr`, `plotly`, `leaflet`, `readr`
+- Packages: `shiny`, `shinydashboard`, `ggplot2`, `dplyr`, `plotly`, `leaflet`, `DT`,`forecast`, `cluster`, `ggthemes`, `leaflet.extras`
 
 Install the required packages using the following R command:
 ```R
