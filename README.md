@@ -30,7 +30,7 @@ install.packages(c("shiny", "shinydashboard", "ggplot2", "dplyr", "plotly", "lea
 1. Clone this repository:
 
 ```
-git clone <repository_url>
+git clone https://github.com/oluwatomisinlalude/Web-App-With-R-Shiny
 ```
 
 2. Open the R project in RStudio.
