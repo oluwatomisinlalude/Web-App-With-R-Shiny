@@ -57,3 +57,6 @@ The dataset (superstore_sales.csv) contains the following columns:
 - Latitude: Latitude of the location.
 - Longitude: Longitude of the location.
 
+## Dashboard Preview
+
+![Dashboard Overview](images/Dashboard.png)
