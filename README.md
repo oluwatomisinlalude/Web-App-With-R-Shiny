@@ -46,14 +46,14 @@ git clone <repository_url>
 ## Dataset
 The dataset (superstore_sales.csv) contains the following columns:
 
-Order.ID: Unique identifier for each order.
-Order.Date: Date of order placement.
-Region: Sales region.
-Category: Product category.
-Sub.Category: Product sub-category.
-Sales: Total sales value.
-Profit: Profit earned from the sale.
-Quantity: Quantity of items sold.
-Latitude: Latitude of the location.
-Longitude: Longitude of the location.
+- Order.ID: Unique identifier for each order.
+- Order.Date: Date of order placement.
+- Region: Sales region.
+- Category: Product category.
+- Sub.Category: Product sub-category.
+- Sales: Total sales value.
+- Profit: Profit earned from the sale.
+- Quantity: Quantity of items sold.
+- Latitude: Latitude of the location.
+- Longitude: Longitude of the location.
 
