@@ -367,34 +367,64 @@ server <- function(input, output) {
   })
   
   # Sales Map
+  
   output$salesMap <- renderLeaflet({
-    leaflet(data) %>%
+    leaflet(data = filteredData()) %>%
       addTiles() %>%
-      addCircles(lng = ~Longitude, lat = ~Latitude, radius = ~Sales / 1000, color = "blue", fill = TRUE)
+      addCircles(
+        lng = ~Longitude, lat = ~Latitude,
+        radius = ~Sales / 1000,
+        color = "blue", fill = TRUE, fillOpacity = 0.5,
+        popup = ~paste0(
+          "<strong>Region:</strong> ", Region,
+          "<br><strong>Total Sales:</strong> $", round(Sales, 2),
+          "<br><strong>Total Profit:</strong> $", round(Profit, 2)
+        )
+      ) %>%
+      addLegend(
+        "bottomright", 
+        pal = colorNumeric(palette = "Blues", domain = filteredData()$Sales),
+        values = ~Sales,
+        title = "Total Sales"
+      )
   })
   
   # Sales Heatmap
+  
   output$salesHeatmap <- renderLeaflet({
-    # Aggregating data
     heatmapData <- filteredData() %>%
       group_by(Latitude, Longitude) %>%
-      summarise(TotalSales = sum(Sales), .groups = "drop")
+      summarise(TotalSales = sum(Sales, na.rm = TRUE), .groups = "drop")
     
-    # Remove NAs and zero sales values
+    # Remove invalid or zero sales data
     heatmapData <- heatmapData %>%
-      filter(!is.na(TotalSales) & TotalSales > 0)
+      filter(!is.na(Latitude) & !is.na(Longitude) & TotalSales > 0)
     
-    # Check max sales value
-    max_sales <- max(heatmapData$TotalSales, na.rm = TRUE)
-    
-    leaflet(heatmapData) %>%
-      addTiles() %>%
-      setView(lng = mean(heatmapData$Longitude), lat = mean(heatmapData$Latitude), zoom = 5) %>%
-      addHeatmap(
-        lng = ~Longitude, lat = ~Latitude, intensity = ~TotalSales,
-        blur = 25, radius = 20, max = max_sales,
-        gradient = c("blue", "green", "yellow", "red")
-      )
+    if (nrow(heatmapData) == 0) {
+      leaflet() %>%
+        addTiles() %>%
+        addPopups(
+          lng = 0, lat = 0,
+          popup = "No data available for heatmap."
+        )
+    } else {
+      # Determine maximum sales for scaling
+      max_sales <- max(heatmapData$TotalSales, na.rm = TRUE)
+      
+      # Render heatmap
+      leaflet(heatmapData) %>%
+        addTiles() %>%
+        setView(
+          lng = mean(heatmapData$Longitude, na.rm = TRUE),
+          lat = mean(heatmapData$Latitude, na.rm = TRUE),
+          zoom = 5
+        ) %>%
+        addHeatmap(
+          lng = ~Longitude, lat = ~Latitude, intensity = ~TotalSales,
+          blur = 25, radius = 20, max = max_sales,
+          gradient = c("blue", "green", "yellow", "red")
+        )
+    }
   })
   
   # Advanced Analysis
